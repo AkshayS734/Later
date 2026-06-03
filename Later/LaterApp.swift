@@ -10,9 +10,11 @@ import SwiftData
 
 @main
 struct LaterApp: App {
+    @StateObject private var storageManager = StorageManager()
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Capsule.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -26,6 +28,7 @@ struct LaterApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(storageManager)
         }
         .modelContainer(sharedModelContainer)
     }
