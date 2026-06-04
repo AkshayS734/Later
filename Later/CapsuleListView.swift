@@ -8,6 +8,7 @@ struct CapsuleListView: View {
     @Query(sort: \Capsule.unlockDate) private var capsules: [Capsule]
 
     @State private var showingCreationSheet = false
+    @State private var showingSettingsSheet = false
     @State private var now = Date()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
@@ -25,11 +26,19 @@ struct CapsuleListView: View {
                         // Header
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text("Your Time Capsules")
+                                Text("Time Capsules")
                                     .font(.system(.largeTitle, design: .rounded))
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
                                 Spacer()
+                                Button(action: { showingSettingsSheet = true }) {
+                                    Image(systemName: "gearshape.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(Color.gray)
+                                }
+                                .frame(minWidth: 44, minHeight: 44)
+                                .accessibilityLabel("Settings")
+                                
                                 Button(action: { showingCreationSheet = true }) {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.title)
@@ -116,6 +125,9 @@ struct CapsuleListView: View {
             .navigationBarHidden(true)
             .sheet(isPresented: $showingCreationSheet) {
                 CapsuleCreationView()
+            }
+            .sheet(isPresented: $showingSettingsSheet) {
+                SettingsView()
             }
             .onReceive(refreshTimer) { date in
                 now = date

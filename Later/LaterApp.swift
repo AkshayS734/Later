@@ -13,12 +13,16 @@ struct LaterApp: App {
     @StateObject private var storageManager = StorageManager()
     @StateObject private var securityManager = SecurityManager()
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Capsule.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        
+        let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.akshay.Later")!
+        let storeURL = appGroupURL.appendingPathComponent("Capsules.sqlite")
+        let modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -30,7 +34,10 @@ struct LaterApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                if securityManager.isUnlocked {
+                if !hasSeenOnboarding {
+                    OnboardingView()
+                        .environmentObject(storageManager)
+                } else if securityManager.isUnlocked {
                     ContentView()
                         .environmentObject(storageManager)
                         .environmentObject(securityManager)
@@ -46,7 +53,7 @@ struct LaterApp: App {
                 if newPhase == .background {
                     securityManager.lock()
                 } else if newPhase == .active {
-                    if !securityManager.isUnlocked {
+                    if hasSeenOnboarding && !securityManager.isUnlocked {
                         securityManager.authenticate()
                     }
                 }

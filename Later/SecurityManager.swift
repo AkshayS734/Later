@@ -5,8 +5,14 @@ import Combine
 @MainActor
 class SecurityManager: ObservableObject {
     @Published var isUnlocked = false
+    @AppStorage("useBiometrics") private var useBiometrics = true
     
     func authenticate() {
+        if !useBiometrics {
+            isUnlocked = true
+            return
+        }
+        
         let context = LAContext()
         var error: NSError?
         

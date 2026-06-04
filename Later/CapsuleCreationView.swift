@@ -3,6 +3,7 @@ import SwiftData
 import PhotosUI
 import UniformTypeIdentifiers
 import AVKit
+import WidgetKit
 
 // MARK: - File-based Transferable for media
 
@@ -385,8 +386,12 @@ struct CapsuleCreationView: View {
         }
         
         modelContext.insert(newCapsule)
+        try? modelContext.save()
+        
         storageManager.scheduleNotification(for: newCapsule)
         storageManager.requestNotificationPermissionIfNeeded()
+        
+        WidgetCenter.shared.reloadAllTimelines()
         
         dismiss()
     }

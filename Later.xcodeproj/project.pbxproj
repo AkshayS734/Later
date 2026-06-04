@@ -6,19 +6,90 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7FD426B42FD14F5D002F22ED /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7FD426B32FD14F5D002F22ED /* WidgetKit.framework */; };
+		7FD426B62FD14F5D002F22ED /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7FD426B52FD14F5D002F22ED /* SwiftUI.framework */; };
+		7FD426C32FD14F5F002F22ED /* LaterWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7FD426B12FD14F5D002F22ED /* LaterWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7FD426C12FD14F5F002F22ED /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7FF8CBFA2FD0980D00F17A49 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7FD426B02FD14F5D002F22ED;
+			remoteInfo = LaterWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7FD426C42FD14F5F002F22ED /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				7FD426C32FD14F5F002F22ED /* LaterWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		7FD426B12FD14F5D002F22ED /* LaterWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LaterWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7FD426B32FD14F5D002F22ED /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		7FD426B52FD14F5D002F22ED /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		7FD426D02FD15650002F22ED /* LaterWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LaterWidgetExtension.entitlements; sourceTree = "<group>"; };
 		7FF8CC022FD0980D00F17A49 /* Later.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Later.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7FD426C72FD14F5F002F22ED /* Exceptions for "LaterWidget" folder in "LaterWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7FD426B02FD14F5D002F22ED /* LaterWidgetExtension */;
+		};
+		7FD426CE2FD1514C002F22ED /* Exceptions for "Later" folder in "LaterWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Capsule.swift,
+			);
+			target = 7FD426B02FD14F5D002F22ED /* LaterWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7FD426B72FD14F5D002F22ED /* LaterWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7FD426C72FD14F5F002F22ED /* Exceptions for "LaterWidget" folder in "LaterWidgetExtension" target */,
+			);
+			path = LaterWidget;
+			sourceTree = "<group>";
+		};
 		7FF8CC042FD0980D00F17A49 /* Later */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7FD426CE2FD1514C002F22ED /* Exceptions for "Later" folder in "LaterWidgetExtension" target */,
+			);
 			path = Later;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7FD426AE2FD14F5D002F22ED /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7FD426B62FD14F5D002F22ED /* SwiftUI.framework in Frameworks */,
+				7FD426B42FD14F5D002F22ED /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7FF8CBFF2FD0980D00F17A49 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -29,10 +100,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7FD426B22FD14F5D002F22ED /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7FD426B32FD14F5D002F22ED /* WidgetKit.framework */,
+				7FD426B52FD14F5D002F22ED /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		7FF8CBF92FD0980D00F17A49 = {
 			isa = PBXGroup;
 			children = (
+				7FD426D02FD15650002F22ED /* LaterWidgetExtension.entitlements */,
 				7FF8CC042FD0980D00F17A49 /* Later */,
+				7FD426B72FD14F5D002F22ED /* LaterWidget */,
+				7FD426B22FD14F5D002F22ED /* Frameworks */,
 				7FF8CC032FD0980D00F17A49 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				7FF8CC022FD0980D00F17A49 /* Later.app */,
+				7FD426B12FD14F5D002F22ED /* LaterWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +132,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7FD426B02FD14F5D002F22ED /* LaterWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7FD426C82FD14F5F002F22ED /* Build configuration list for PBXNativeTarget "LaterWidgetExtension" */;
+			buildPhases = (
+				7FD426AD2FD14F5D002F22ED /* Sources */,
+				7FD426AE2FD14F5D002F22ED /* Frameworks */,
+				7FD426AF2FD14F5D002F22ED /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7FD426B72FD14F5D002F22ED /* LaterWidget */,
+			);
+			name = LaterWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = LaterWidgetExtension;
+			productReference = 7FD426B12FD14F5D002F22ED /* LaterWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		7FF8CC012FD0980D00F17A49 /* Later */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7FF8CC0F2FD0980F00F17A49 /* Build configuration list for PBXNativeTarget "Later" */;
@@ -55,10 +161,12 @@
 				7FF8CBFE2FD0980D00F17A49 /* Sources */,
 				7FF8CBFF2FD0980D00F17A49 /* Frameworks */,
 				7FF8CC002FD0980D00F17A49 /* Resources */,
+				7FD426C42FD14F5F002F22ED /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				7FD426C22FD14F5F002F22ED /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				7FF8CC042FD0980D00F17A49 /* Later */,
@@ -80,6 +188,9 @@
 				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					7FD426B02FD14F5D002F22ED = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					7FF8CC012FD0980D00F17A49 = {
 						CreatedOnToolsVersion = 26.5;
 					};
@@ -100,11 +211,19 @@
 			projectRoot = "";
 			targets = (
 				7FF8CC012FD0980D00F17A49 /* Later */,
+				7FD426B02FD14F5D002F22ED /* LaterWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		7FD426AF2FD14F5D002F22ED /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7FF8CC002FD0980D00F17A49 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +234,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7FD426AD2FD14F5D002F22ED /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7FF8CBFE2FD0980D00F17A49 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +250,77 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		7FD426C22FD14F5F002F22ED /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7FD426B02FD14F5D002F22ED /* LaterWidgetExtension */;
+			targetProxy = 7FD426C12FD14F5F002F22ED /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		7FD426C52FD14F5F002F22ED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = LaterWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VXG4SAHTWS;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LaterWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LaterWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akshay.Later.LaterWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7FD426C62FD14F5F002F22ED /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = LaterWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VXG4SAHTWS;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LaterWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LaterWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akshay.Later.LaterWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		7FF8CC0D2FD0980F00F17A49 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -251,6 +447,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Later/Later.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VXG4SAHTWS;
@@ -284,6 +481,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Later/Later.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VXG4SAHTWS;
@@ -315,6 +513,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7FD426C82FD14F5F002F22ED /* Build configuration list for PBXNativeTarget "LaterWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7FD426C52FD14F5F002F22ED /* Debug */,
+				7FD426C62FD14F5F002F22ED /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		7FF8CBFD2FD0980D00F17A49 /* Build configuration list for PBXProject "Later" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
