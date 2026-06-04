@@ -68,6 +68,9 @@ class StorageManager: ObservableObject {
             }
             try fm.copyItem(at: sourceURL, to: destURL)
             
+            // Apply Data Protection so files are inaccessible when device is locked
+            try fm.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: destURL.path)
+            
             // Clean up temporary source file
             try? fm.removeItem(at: sourceURL)
             return mediaFileName

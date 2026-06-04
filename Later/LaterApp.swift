@@ -11,6 +11,8 @@ import SwiftData
 @main
 struct LaterApp: App {
     @StateObject private var storageManager = StorageManager()
+    @StateObject private var securityManager = SecurityManager()
+    @Environment(\.scenePhase) private var scenePhase
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -27,8 +29,28 @@ struct LaterApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(storageManager)
+            ZStack {
+                if securityManager.isUnlocked {
+                    ContentView()
+                        .environmentObject(storageManager)
+                        .environmentObject(securityManager)
+                } else {
+                    Color(UIColor.systemBackground)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            securityManager.authenticate()
+                        }
+                }
+            }
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                if newPhase == .background {
+                    securityManager.lock()
+                } else if newPhase == .active {
+                    if !securityManager.isUnlocked {
+                        securityManager.authenticate()
+                    }
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }
