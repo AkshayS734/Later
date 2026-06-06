@@ -8,19 +8,17 @@ struct WidgetCapsule {
     let isSurprise: Bool
 }
 
+@MainActor
 struct Provider: TimelineProvider {
-    @MainActor
     func placeholder(in context: Context) -> CapsuleEntry {
         CapsuleEntry(date: Date(), nextCapsule: nil)
     }
 
-    @MainActor
     func getSnapshot(in context: Context, completion: @escaping (CapsuleEntry) -> ()) {
         let entry = CapsuleEntry(date: Date(), nextCapsule: getNextCapsule())
         completion(entry)
     }
 
-    @MainActor
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         let nextCapsule = getNextCapsule()
         let entry = CapsuleEntry(date: Date(), nextCapsule: nextCapsule)
@@ -35,7 +33,6 @@ struct Provider: TimelineProvider {
         completion(timeline)
     }
     
-    @MainActor
     private func getNextCapsule() -> WidgetCapsule? {
         // Provide the schema to ModelContainer
         let schema = Schema([Capsule.self])

@@ -58,6 +58,7 @@ struct LaterApp: App {
                     }
                 }
             }
+            .tint(AppTheme.accent)
         }
         .modelContainer(sharedModelContainer)
     }

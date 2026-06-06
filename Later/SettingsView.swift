@@ -3,49 +3,56 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("useBiometrics") private var useBiometrics = true
     @Environment(\.dismiss) var dismiss
-    
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+    private var buildNumber: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Security")) {
-                    Toggle("Use Face ID / Touch ID", isOn: $useBiometrics)
-                        .tint(.cyan)
-                    
-                    Text("When enabled, Later requires biometric authentication to view your time capsules.")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                Section {
+                    Toggle("Face ID / Touch ID", isOn: $useBiometrics)
+                } header: {
+                    Text("Security")
+                } footer: {
+                    Text("Require biometric authentication to view your time capsules.")
                 }
-                
-                Section(header: Text("Notifications")) {
+
+                Section {
                     Button("Manage Notifications") {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             UIApplication.shared.open(url)
                         }
                     }
-                    .foregroundColor(.cyan)
-                    
-                    Text("We use notifications to alert you when a capsule is ready to open.")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                } header: {
+                    Text("Notifications")
+                } footer: {
+                    Text("Used to alert you when a capsule is ready to open.")
                 }
-                
-                Section(header: Text("About")) {
+
+                Section {
                     HStack {
                         Text("Version")
                         Spacer()
-                        Text("1.0.0")
-                            .foregroundColor(.gray)
+                        Text("\(appVersion) (\(buildNumber))")
+                            .foregroundStyle(AppTheme.secondaryLabel)
                     }
+                } header: {
+                    Text("About")
                 }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.cyan)
+                    .fontWeight(.semibold)
                 }
             }
         }
