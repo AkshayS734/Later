@@ -1,87 +1,112 @@
 import SwiftUI
 
-// MARK: - App Theme
+// MARK: - App Design Tokens
+//
+// All colors are semantic and adapt to Light / Dark mode automatically.
+// No hardcoded RGB values. Raw literals (cyan, orange) only appear where
+// they express a specific, intentional meaning (e.g., state tints).
 
-struct Theme {
-    
-    // MARK: - Colors
-    
-    static let background = Color("Background") // Define in Assets or use fallback
-    static let lockedGradientStart = Color(red: 0.1, green: 0.1, blue: 0.2)
-    static let lockedGradientEnd = Color(red: 0.05, green: 0.05, blue: 0.1)
-    
-    static let unlockedGradientStart = Color(red: 1.0, green: 0.95, blue: 0.8)
-    static let unlockedGradientEnd = Color(red: 1.0, green: 0.8, blue: 0.6)
-    
-    static let accent = Color.cyan
-    static let secondaryAccent = Color.pink
-    
-    // MARK: - Gradients
-    
-    static var lockedBackground: LinearGradient {
-        LinearGradient(
-            colors: [lockedGradientStart, lockedGradientEnd],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+struct AppTheme {
+
+    // MARK: - Accent
+    // Warm amber — evokes time, nostalgia, warmth. Set as the global tint.
+    static let accent = Color("AppAccent")
+
+    // MARK: - Semantic State Colors
+    static let sealedTint  = Color(.systemOrange)  // locked capsule
+    static let readyTint   = Color(.systemGreen)   // unlocked / ready
+    static let surpriseTint = Color(.systemPurple) // surprise capsule
+    static let destructive = Color(.systemRed)
+
+    // MARK: - Backgrounds  (all system-adaptive)
+    static let background         = Color(.systemBackground)
+    static let groupedBackground  = Color(.systemGroupedBackground)
+    static let secondaryBackground = Color(.secondarySystemBackground)
+    static let tertiaryBackground  = Color(.tertiarySystemBackground)
+
+    // MARK: - Text  (system-adaptive)
+    static let label          = Color(.label)
+    static let secondaryLabel = Color(.secondaryLabel)
+    static let tertiaryLabel  = Color(.tertiaryLabel)
+    static let placeholderText = Color(.placeholderText)
+
+    // MARK: - Surfaces / Borders
+    static let separator      = Color(.separator)
+    static let opaqueSeparator = Color(.opaqueSeparator)
+
+    // MARK: - Spacing Scale (8pt grid)
+    enum Spacing {
+        static let xs:  CGFloat = 4
+        static let sm:  CGFloat = 8
+        static let md:  CGFloat = 12
+        static let lg:  CGFloat = 16
+        static let xl:  CGFloat = 20
+        static let xxl: CGFloat = 24
+        static let xxxl: CGFloat = 32
     }
-    
-    static var unlockedBackground: LinearGradient {
-        LinearGradient(
-            colors: [unlockedGradientStart, unlockedGradientEnd],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+
+    // MARK: - Corner Radii
+    enum Radius {
+        static let sm: CGFloat = 8
+        static let md: CGFloat = 12
+        static let lg: CGFloat = 16
+        static let xl: CGFloat = 20
     }
-    
+
     // MARK: - Shadows
-    
-    static let softShadow = HashableShadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
-    static let glowShadow = HashableShadow(color: .cyan.opacity(0.5), radius: 15, x: 0, y: 0)
-}
-
-struct HashableShadow: Hashable {
-    let color: Color
-    let radius: CGFloat
-    let x: CGFloat
-    let y: CGFloat
-}
-
-// MARK: - View Modifiers
-
-struct CardStyle: ViewModifier {
-    var isLocked: Bool
-    
-    func body(content: Content) -> some View {
-        content
-            .padding()
-            .background {
-                if isLocked {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
-                } else {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(Color(uiColor: .secondarySystemBackground))
-                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .strokeBorder(
-                                    LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                    lineWidth: 2
-                                )
-                        )
-                }
-            }
+    // Kept subtle — elevation should be implied, not shouted.
+    static func cardShadow(colorScheme: ColorScheme) -> (color: Color, radius: CGFloat, y: CGFloat) {
+        colorScheme == .dark
+            ? (Color.black.opacity(0.4), 8, 4)
+            : (Color.black.opacity(0.08), 6, 3)
     }
 }
+
+// MARK: - Locked / Unlocked Screen Backgrounds
+//
+// These are the ONE place we intentionally use a custom background
+// to create a distinct emotional context for each app state.
+// They respect ColorScheme and remain HIG-compliant.
+
+extension AppTheme {
+
+    /// The detail screen background while a capsule is sealed.
+    static var lockedBackground: some ShapeStyle {
+        // Deep navy gradient — evokes mystery and sealed time.
+        LinearGradient(
+            colors: [
+                Color(red: 0.07, green: 0.09, blue: 0.18),
+                Color(red: 0.04, green: 0.04, blue: 0.09)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    /// The detail screen background when a capsule has been opened.
+    static var unlockedBackground: some ShapeStyle {
+        // Warm parchment — evokes a revealed letter, golden hour.
+        LinearGradient(
+            colors: [
+                Color(red: 1.0, green: 0.96, blue: 0.84),
+                Color(red: 1.0, green: 0.87, blue: 0.65)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+}
+
+// MARK: - View Extensions
 
 extension View {
-    func capsuleCardStyle(isLocked: Bool) -> some View {
-        modifier(CardStyle(isLocked: isLocked))
-    }
-    
-    func glowingText() -> some View {
-        self.shadow(color: .cyan.opacity(0.8), radius: 8)
+    /// Applies the standard capsule list card background.
+    func capsuleCardBackground(colorScheme: ColorScheme) -> some View {
+        let shadow = AppTheme.cardShadow(colorScheme: colorScheme)
+        return self.background {
+            RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .shadow(color: shadow.color, radius: shadow.radius, x: 0, y: shadow.y)
+        }
     }
 }

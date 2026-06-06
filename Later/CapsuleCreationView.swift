@@ -9,7 +9,7 @@ import WidgetKit
 
 struct MediaFile: Transferable {
     let url: URL
-    
+
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(importedContentType: .item) { received in
             let tempDir = FileManager.default.temporaryDirectory
@@ -22,24 +22,35 @@ struct MediaFile: Transferable {
     }
 }
 
-// MARK: - Quick Preset
+// MARK: - Unlock Preset
 
 enum SealPreset: String, CaseIterable {
-    case oneDay   = "1 Day"
-    case oneWeek  = "1 Week"
-    case oneMonth = "1 Month"
-    case oneYear  = "1 Year"
+    case oneDay    = "1 Day"
+    case oneWeek   = "1 Week"
+    case oneMonth  = "1 Month"
+    case oneYear   = "1 Year"
     case surpriseMe = "Surprise Me"
-    case custom   = "Custom"
-    
+    case custom    = "Custom"
+
     var interval: TimeInterval? {
         switch self {
-        case .oneDay:   return 86_400
-        case .oneWeek:  return 7 * 86_400
-        case .oneMonth: return 30 * 86_400
-        case .oneYear:  return 365 * 86_400
-        case .surpriseMe: return Double.random(in: 2_592_000...94_608_000) // 30 days to 3 years
-        case .custom:   return nil
+        case .oneDay:    return 86_400
+        case .oneWeek:   return 7 * 86_400
+        case .oneMonth:  return 30 * 86_400
+        case .oneYear:   return 365 * 86_400
+        case .surpriseMe: return Double.random(in: 2_592_000...94_608_000)
+        case .custom:    return nil
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .oneDay:    return "sun.rise"
+        case .oneWeek:   return "calendar.badge.clock"
+        case .oneMonth:  return "calendar"
+        case .oneYear:   return "hourglass"
+        case .surpriseMe: return "dice"
+        case .custom:    return "slider.horizontal.3"
         }
     }
 }
@@ -51,18 +62,21 @@ struct CapsuleCreationView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject var storageManager: StorageManager
     @Environment(\.modelContext) private var modelContext
-    
+
     @State private var title: String = ""
     @State private var note: String = ""
     @State private var unlockDate: Date = Date().addingTimeInterval(86400)
     @State private var selectedPreset: SealPreset = .oneDay
-    
+
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedMediaFileURL: URL?
     @State private var selectedMediaType: UTType?
     @State private var thumbnailImage: UIImage?
     @State private var isLoadingMedia = false
-    
+
+    @State private var currentPromptIndex = 0
+    @State private var showingPrompt = false
+
     let prompts = [
         "What is your biggest dream right now?",
         "Write down 3 things you are grateful for today.",
@@ -72,339 +86,249 @@ struct CapsuleCreationView: View {
         "Describe a challenge you recently overcame.",
         "What is a risk you want to take soon?"
     ]
-    @State private var currentPromptIndex = 0
-    
+
     private var canSave: Bool { !title.isEmpty && !isLoadingMedia }
-    
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                // Dark gradient background — consistent with list
-                LinearGradient(
-                    colors: [Color(white: 0.1), Color.black],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 28) {
-                        // Header
-                        Text("New Memory")
-                            .font(.system(.title, design: .rounded))
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
-                            .padding(.top, 8)
-                            
-                        // Inspiration Banner
-                        VStack(spacing: 8) {
-                            HStack {
-                                Text("✨ Inspiration")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.cyan)
-                                Spacer()
-                                Button(action: {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        currentPromptIndex = (currentPromptIndex + 1) % prompts.count
-                                    }
-                                }) {
-                                    Image(systemName: "arrow.2.circlepath")
-                                        .font(.caption)
-                                        .foregroundColor(.white.opacity(0.6))
-                                }
-                            }
-                            
-                            Button(action: {
-                                if note.isEmpty {
-                                    note = prompts[currentPromptIndex] + "\n\n"
-                                } else {
-                                    note += "\n\n" + prompts[currentPromptIndex] + "\n\n"
-                                }
-                            }) {
+            Form {
+                // MARK: Memory Section
+                Section {
+                    TextField("Title", text: $title)
+                        .font(.body)
+                        .accessibilityLabel("Memory title")
+                        .accessibilityHint("Required. Give your memory a name.")
+
+                    ZStack(alignment: .topLeading) {
+                        if note.isEmpty {
+                            Text("Write a note to your future self…")
+                                .foregroundStyle(AppTheme.placeholderText)
+                                .font(.body)
+                                .padding(.top, 8)
+                                .padding(.leading, 4)
+                                .allowsHitTesting(false)
+                        }
+                        TextEditor(text: $note)
+                            .font(.body)
+                            .frame(minHeight: 100)
+                            .accessibilityLabel("Memory note")
+                            .accessibilityHint("Optional. Write a message to your future self.")
+                    }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                } header: {
+                    Text("Memory")
+                }
+
+                // MARK: Inspiration (Progressive Disclosure)
+                Section {
+                    DisclosureGroup(
+                        isExpanded: $showingPrompt,
+                        content: {
+                            VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
                                 Text(prompts[currentPromptIndex])
                                     .font(.subheadline)
+                                    .foregroundStyle(AppTheme.secondaryLabel)
                                     .italic()
-                                    .foregroundColor(.white.opacity(0.8))
-                                    .multilineTextAlignment(.leading)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(12)
-                                    .background(Color.cyan.opacity(0.15))
-                                    .cornerRadius(10)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        .padding(.horizontal)
-                        
-                        // Section 1: Memory Details
-                        VStack(spacing: 12) {
-                            TextField("Give it a title...", text: $title)
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .tint(.cyan)
-                                .padding()
-                                .background(Color.white.opacity(0.08))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.cyan.opacity(title.isEmpty ? 0.2 : 0.6), lineWidth: 1)
-                                )
-                                .accessibilityLabel("Capsule title")
-                                .accessibilityHint("Required. Give your memory a name.")
-                            
-                            TextField("Write a note to your future self...", text: $note, axis: .vertical)
-                                .lineLimit(4...8)
-                                .font(.body)
-                                .foregroundColor(.white)
-                                .tint(.cyan)
-                                .padding()
-                                .background(Color.white.opacity(0.08))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                                )
-                                .accessibilityLabel("Memory note")
-                                .accessibilityHint("Optional. Write a message to your future self.")
-                        }
-                        .colorScheme(.dark)   // fields always have dark bg — keep placeholder light
-                        .padding(.horizontal)
-                        
-                        // Section 2: When to Unlock
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text("When should this unlock?")
-                                .font(.headline)
-                                .foregroundColor(.white.opacity(0.7))
-                                .padding(.horizontal)
-                            
-                            // Quick preset chips
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 10) {
-                                    ForEach(SealPreset.allCases, id: \.self) { preset in
-                                        Button {
-                                            withAnimation(reduceMotion ? nil : .spring(response: 0.3)) {
-                                                selectedPreset = preset
-                                                if let interval = preset.interval {
-                                                    unlockDate = Date().addingTimeInterval(interval)
-                                                }
-                                            }
-                                        } label: {
-                                            HStack(spacing: 4) {
-                                                if selectedPreset == preset {
-                                                    Image(systemName: "checkmark")
-                                                        .font(.caption2.bold())
-                                                } else if preset == .surpriseMe {
-                                                    Image(systemName: "dice.fill")
-                                                        .font(.caption2)
-                                                }
-                                                Text(preset.rawValue)
-                                                    .font(.subheadline)
-                                                    .fontWeight(.semibold)
-                                            }
-                                            .foregroundColor(selectedPreset == preset ? .black : .white)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 10)
-                                            .background(
-                                                selectedPreset == preset
-                                                    ? Color.cyan
-                                                    : Color.white.opacity(0.12)
-                                            )
-                                            .cornerRadius(20)
-                                        }
-                                        .frame(minHeight: 44)
-                                        .accessibilityAddTraits(selectedPreset == preset ? .isSelected : [])
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.top, AppTheme.Spacing.sm)
+
+                                HStack {
+                                    Button("Use this prompt") {
+                                        let insertion = prompts[currentPromptIndex] + "\n\n"
+                                        note = note.isEmpty ? insertion : note + insertion
+                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     }
+                                    .font(.subheadline.weight(.medium))
+                                    .buttonStyle(.borderless)
+
+                                    Spacer()
+
+                                    Button {
+                                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                                            currentPromptIndex = (currentPromptIndex + 1) % prompts.count
+                                        }
+                                    } label: {
+                                        Label("Next prompt", systemImage: "arrow.2.circlepath")
+                                            .labelStyle(.iconOnly)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .foregroundStyle(AppTheme.secondaryLabel)
+                                    .accessibilityLabel("Shuffle prompt")
                                 }
-                                .padding(.horizontal)
                             }
-                            
-                            // Date picker shown only for Custom
-                            if selectedPreset == .custom {
-                                DatePicker(
-                                    "Unlock Date",
-                                    selection: $unlockDate,
-                                    in: Date().addingTimeInterval(60)...
-                                )
-                                .datePickerStyle(.graphical)
-                                .tint(.cyan)
-                                .colorScheme(.dark)
-                                .background(Color.white.opacity(0.06))
-                                .cornerRadius(12)
-                                .padding(.horizontal)
-                                .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+                        },
+                        label: {
+                            Label("Writing Prompts", systemImage: "lightbulb")
+                                .foregroundStyle(AppTheme.secondaryLabel)
+                                .font(.subheadline)
+                        }
+                    )
+                }
+
+                // MARK: Unlock Date Section
+                Section {
+                    // Preset chips
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            ForEach(SealPreset.allCases, id: \.self) { preset in
+                                presetChip(preset)
                             }
                         }
-                        
-                        // Section 3: Media
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Attach a Memory")
-                                .font(.headline)
-                                .foregroundColor(.white.opacity(0.7))
-                                .padding(.horizontal)
-                            
-                            PhotosPicker(selection: $selectedItem, matching: .any(of: [.images, .videos])) {
-                                mediaPickerLabel
-                            }
-                            .accessibilityLabel(thumbnailImage != nil ? "Change attached photo or video" : "Attach a photo or video. Optional.")
-                            .padding(.horizontal)
-                        }
-                        
-                        // Bottom "Seal Capsule" button
-                        Button(action: saveCapsule) {
-                            HStack(spacing: 10) {
-                                Image(systemName: "lock.fill")
-                                Text("Seal Capsule")
-                                    .fontWeight(.bold)
-                            }
-                            .font(.headline)
-                            .foregroundColor(canSave ? .black : Color.white.opacity(0.55))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(
-                                canSave
-                                    ? LinearGradient(colors: [.cyan, .blue], startPoint: .leading, endPoint: .trailing)
-                                    : LinearGradient(colors: [Color.white.opacity(0.1), Color.white.opacity(0.1)], startPoint: .leading, endPoint: .trailing)
-                            )
-                            .cornerRadius(16)
-                            .shadow(color: canSave ? .cyan.opacity(0.4) : .clear, radius: 12, y: 6)
-                        }
-                        .disabled(!canSave)
-                        .padding(.horizontal)
-                        .padding(.bottom, 40)
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: canSave)
+                        .padding(.vertical, AppTheme.Spacing.sm)
+                        .padding(.horizontal, 2)
                     }
-                    .padding(.top, 12)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+
+                    // Custom date picker
+                    if selectedPreset == .custom {
+                        DatePicker(
+                            "Unlock Date",
+                            selection: $unlockDate,
+                            in: Date().addingTimeInterval(60)...
+                        )
+                        .datePickerStyle(.compact)
+                        .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+                    }
+
+                    // Surprise capsule explanation
+                    if selectedPreset == .surpriseMe {
+                        Label("The unlock date is a secret — even from you.", systemImage: "questionmark.circle")
+                            .font(.footnote)
+                            .foregroundStyle(AppTheme.secondaryLabel)
+                            .listRowBackground(AppTheme.surpriseTint.opacity(0.08))
+                            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.97)))
+                    }
+                } header: {
+                    Text("When to Unlock")
+                }
+
+                // MARK: Media Section
+                Section {
+                    PhotosPicker(selection: $selectedItem, matching: .any(of: [.images, .videos])) {
+                        mediaPickerLabel
+                    }
+                    .accessibilityLabel(thumbnailImage != nil ? "Change attached photo or video" : "Attach a photo or video. Optional.")
+                } header: {
+                    Text("Attachment")
                 }
             }
+            .navigationTitle("New Memory")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         cleanUpTempFile()
                         dismiss()
                     }
-                    .foregroundColor(.cyan)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Seal") {
+                        saveCapsule()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!canSave)
                 }
             }
-            .onChange(of: selectedItem) { newItem in
+            .onChange(of: selectedItem) { _, newItem in
                 loadMedia(newItem)
             }
         }
-        // Respects user's appearance preference — no forced dark mode
     }
-    
-    // MARK: - Media picker label
-    
+
+    // MARK: - Preset Chip
+
+    @ViewBuilder
+    private func presetChip(_ preset: SealPreset) -> some View {
+        let isSelected = selectedPreset == preset
+        Button {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.3)) {
+                selectedPreset = preset
+                if let interval = preset.interval {
+                    unlockDate = Date().addingTimeInterval(interval)
+                }
+            }
+        } label: {
+            Label(preset.rawValue, systemImage: preset.icon)
+                .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? Color(.systemBackground) : AppTheme.secondaryLabel)
+                .labelStyle(.titleOnly)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.vertical, AppTheme.Spacing.sm)
+                .background(isSelected ? AppTheme.accent : Color(.tertiarySystemFill), in: SwiftUI.Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    // MARK: - Media Picker Label
+
     @ViewBuilder
     private var mediaPickerLabel: some View {
         if isLoadingMedia {
-            HStack {
-                ProgressView().tint(.cyan)
-                Text("Processing...").foregroundColor(.white.opacity(0.6))
+            HStack(spacing: AppTheme.Spacing.sm) {
+                ProgressView()
+                Text("Processing…")
+                    .foregroundStyle(AppTheme.secondaryLabel)
+                    .font(.subheadline)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 200)
-            .background(Color.white.opacity(0.08))
-            .cornerRadius(12)
+            .frame(maxWidth: .infinity, minHeight: 44)
         } else if let thumbnail = thumbnailImage {
             ZStack(alignment: .bottomTrailing) {
                 Image(uiImage: thumbnail)
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: .infinity)
-                    .frame(height: 200)
+                    .frame(height: 180)
                     .clipped()
-                    .cornerRadius(12)
-                
-                // Change badge
-                HStack(spacing: 4) {
-                    Image(systemName: "pencil")
-                    Text("Change")
-                }
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(.ultraThinMaterial)
-                .cornerRadius(8)
-                .padding(10)
+                    .clipShape(.rect(cornerRadius: AppTheme.Radius.md))
+
+                Label("Change", systemImage: "pencil.circle.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, AppTheme.Spacing.sm)
+                    .padding(.vertical, AppTheme.Spacing.xs)
+                    .background(.ultraThinMaterial, in: SwiftUI.Capsule())
+                    .padding(AppTheme.Spacing.sm)
             }
         } else if selectedMediaFileURL != nil {
-            // Video (no thumbnail generated yet) or fallback
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
-                VStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.largeTitle)
-                        .foregroundColor(.green)
-                    Text("Media Attached")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    if let type = selectedMediaType {
-                        Text(type.description)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                }
-            }
-            .frame(height: 200)
+            Label("Media attached", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(AppTheme.readyTint)
+                .frame(maxWidth: .infinity, minHeight: 44)
         } else {
-            VStack(spacing: 12) {
-                Image(systemName: "photo.on.rectangle.angled")
-                    .font(.largeTitle)
-                    .foregroundColor(.cyan)
-                    .accessibilityHidden(true)
-                Text("Tap to add a Photo or Video")
-                    .font(.headline)
-                    .foregroundColor(.white.opacity(0.8))
-                Text("Optional")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 200)
-            .background(Color.white.opacity(0.08))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(Color.cyan.opacity(0.3), style: Style.dash)
-            )
+            Label("Add Photo or Video", systemImage: "photo.on.rectangle")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.secondaryLabel)
+                .frame(maxWidth: .infinity, minHeight: 44)
         }
     }
-    
+
     // MARK: - Logic
-    
+
     private func loadMedia(_ newItem: PhotosPickerItem?) {
         Task {
             isLoadingMedia = true
             defer { isLoadingMedia = false }
-            
+
             if let previousURL = selectedMediaFileURL {
                 try? FileManager.default.removeItem(at: previousURL)
                 selectedMediaFileURL = nil
                 thumbnailImage = nil
             }
-            
+
             guard let newItem else {
                 selectedMediaType = nil
                 return
             }
-            
+
             if let type = newItem.supportedContentTypes.first {
                 selectedMediaType = type
             } else {
                 selectedMediaType = .jpeg
             }
-            
+
             if let mediaFile = try? await newItem.loadTransferable(type: MediaFile.self) {
                 selectedMediaFileURL = mediaFile.url
-                
-                // Generate thumbnail on background thread
+
                 let fileURL = mediaFile.url
                 let isMovie = selectedMediaType?.conforms(to: .movie) == true
                 let thumb = await Task.detached(priority: .userInitiated) { () -> UIImage? in
@@ -412,7 +336,8 @@ struct CapsuleCreationView: View {
                         let asset = AVURLAsset(url: fileURL)
                         let gen = AVAssetImageGenerator(asset: asset)
                         gen.appliesPreferredTrackTransform = true
-                        if let cgImage = try? gen.copyCGImage(at: .zero, actualTime: nil) {
+                        gen.maximumSize = CGSize(width: 600, height: 600)
+                        if let cgImage = try? await gen.image(at: .zero).image {
                             return UIImage(cgImage: cgImage)
                         }
                     } else {
@@ -426,7 +351,7 @@ struct CapsuleCreationView: View {
             }
         }
     }
-    
+
     private func saveCapsule() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         let newCapsule = Capsule(
@@ -436,23 +361,22 @@ struct CapsuleCreationView: View {
             unlockDate: unlockDate,
             isSurprise: selectedPreset == .surpriseMe
         )
-        
+
         if let sourceURL = selectedMediaFileURL {
             let path = storageManager.copyMedia(from: sourceURL, mediaType: selectedMediaType?.identifier, capsuleId: newCapsule.id)
             newCapsule.mediaPath = path
         }
-        
+
         modelContext.insert(newCapsule)
         try? modelContext.save()
-        
+
         storageManager.scheduleNotification(for: newCapsule)
         storageManager.requestNotificationPermissionIfNeeded()
-        
+
         WidgetCenter.shared.reloadAllTimelines()
-        
         dismiss()
     }
-    
+
     private func cleanUpTempFile() {
         if let url = selectedMediaFileURL {
             try? FileManager.default.removeItem(at: url)
@@ -460,8 +384,8 @@ struct CapsuleCreationView: View {
     }
 }
 
-// MARK: - Styles
+// MARK: - Styles (kept for backward compatibility)
 
 struct Style {
-    static let dash = StrokeStyle(lineWidth: 2, lineCap: .round, dash: [10, 5])
+    static let dash = StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [8, 4])
 }
