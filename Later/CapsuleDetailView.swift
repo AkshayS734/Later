@@ -195,10 +195,17 @@ struct CapsuleDetailView: View {
                     .tracking(2)
                     .foregroundColor(Color.white.opacity(0.7))
                 
-                Text(capsule.unlockDate.formatted(date: .long, time: .shortened))
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
+                if capsule.isSurprise {
+                    Text("A Surprise Date")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                } else {
+                    Text(capsule.unlockDate.formatted(date: .long, time: .shortened))
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                }
             }
             
             if capsule.isUnlockable {
@@ -219,13 +226,20 @@ struct CapsuleDetailView: View {
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.75))
                     
-                    Text(warmCountdown(to: capsule.unlockDate, from: now))
-                        .font(.system(.title3, design: .monospaced))
-                        .fontWeight(.medium)
-                        .foregroundColor(.cyan)
-                        .contentTransition(.numericText())
-                        .animation(.easeInOut(duration: 0.5), value: warmCountdown(to: capsule.unlockDate, from: now))
-                        .accessibilityLabel("Time remaining: \(warmCountdown(to: capsule.unlockDate, from: now))")
+                    if capsule.isSurprise {
+                        Text("???")
+                            .font(.system(.title3, design: .monospaced))
+                            .fontWeight(.medium)
+                            .foregroundColor(.cyan)
+                    } else {
+                        Text(warmCountdown(to: capsule.unlockDate, from: now))
+                            .font(.system(.title3, design: .monospaced))
+                            .fontWeight(.medium)
+                            .foregroundColor(.cyan)
+                            .contentTransition(.numericText())
+                            .animation(.easeInOut(duration: 0.5), value: warmCountdown(to: capsule.unlockDate, from: now))
+                            .accessibilityLabel("Time remaining: \(warmCountdown(to: capsule.unlockDate, from: now))")
+                    }
                 }
                 .padding(.top, 20)
             }

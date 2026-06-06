@@ -5,6 +5,7 @@ import SwiftData
 struct WidgetCapsule {
     let title: String
     let unlockDate: Date
+    let isSurprise: Bool
 }
 
 struct Provider: TimelineProvider {
@@ -52,7 +53,7 @@ struct Provider: TimelineProvider {
         )
         guard let capsule = try? modelContainer.mainContext.fetch(descriptor).first else { return nil }
         
-        return WidgetCapsule(title: capsule.title, unlockDate: capsule.unlockDate)
+        return WidgetCapsule(title: capsule.title, unlockDate: capsule.unlockDate, isSurprise: capsule.isSurprise)
     }
 }
 
@@ -98,11 +99,17 @@ struct LaterWidgetEntryView : View {
                                 .font(.system(size: 9, weight: .bold, design: .rounded))
                                 .foregroundColor(.white.opacity(0.5))
                             
-                            Text(capsule.unlockDate, style: .timer)
-                                .font(.system(size: 18, weight: .heavy, design: .monospaced))
-                                .foregroundColor(.cyan)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
+                            if capsule.isSurprise {
+                                Text("???")
+                                    .font(.system(size: 18, weight: .heavy, design: .monospaced))
+                                    .foregroundColor(.cyan)
+                            } else {
+                                Text(capsule.unlockDate, style: .timer)
+                                    .font(.system(size: 18, weight: .heavy, design: .monospaced))
+                                    .foregroundColor(.cyan)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                            }
                         }
                     }
                 }

@@ -11,8 +11,9 @@ final class Capsule: Identifiable {
     var creationDate: Date
     var unlockDate: Date
     var isOpened: Bool
+    var isSurprise: Bool = false
     
-    init(id: UUID = UUID(), title: String, note: String, mediaPath: String? = nil, mediaType: String? = nil, creationDate: Date = Date(), unlockDate: Date, isOpened: Bool = false) {
+    init(id: UUID = UUID(), title: String, note: String, mediaPath: String? = nil, mediaType: String? = nil, creationDate: Date = Date(), unlockDate: Date, isOpened: Bool = false, isSurprise: Bool = false) {
         self.id = id
         self.title = title
         self.note = note
@@ -21,6 +22,7 @@ final class Capsule: Identifiable {
         self.creationDate = creationDate
         self.unlockDate = unlockDate
         self.isOpened = isOpened
+        self.isSurprise = isSurprise
     }
     
     @Transient

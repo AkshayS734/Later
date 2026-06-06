@@ -201,9 +201,15 @@ struct CapsuleCard: View {
                     .minimumScaleFactor(0.85)
                 
                 if isLocked {
-                    Text("Unlocks \(capsule.unlockDate.formatted(date: .abbreviated, time: .shortened))")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.75))
+                    if capsule.isSurprise {
+                        Text("Unlocks at a surprise date")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.75))
+                    } else {
+                        Text("Unlocks \(capsule.unlockDate.formatted(date: .abbreviated, time: .shortened))")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.75))
+                    }
                 } else {
                     Text("Ready to view")
                         .font(.caption)
@@ -237,7 +243,7 @@ struct CapsuleCard: View {
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(isLocked
-            ? "\(capsule.title), sealed until \(capsule.unlockDate.formatted(date: .abbreviated, time: .shortened))"
+            ? (capsule.isSurprise ? "\(capsule.title), sealed until a surprise date" : "\(capsule.title), sealed until \(capsule.unlockDate.formatted(date: .abbreviated, time: .shortened))")
             : "\(capsule.title), ready to view")
         .accessibilityHint("Double-tap to open")
     }

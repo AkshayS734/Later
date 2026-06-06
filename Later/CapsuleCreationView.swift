@@ -29,6 +29,7 @@ enum SealPreset: String, CaseIterable {
     case oneWeek  = "1 Week"
     case oneMonth = "1 Month"
     case oneYear  = "1 Year"
+    case surpriseMe = "Surprise Me"
     case custom   = "Custom"
     
     var interval: TimeInterval? {
@@ -37,6 +38,7 @@ enum SealPreset: String, CaseIterable {
         case .oneWeek:  return 7 * 86_400
         case .oneMonth: return 30 * 86_400
         case .oneYear:  return 365 * 86_400
+        case .surpriseMe: return Double.random(in: 2_592_000...94_608_000) // 30 days to 3 years
         case .custom:   return nil
         }
     }
@@ -61,6 +63,17 @@ struct CapsuleCreationView: View {
     @State private var thumbnailImage: UIImage?
     @State private var isLoadingMedia = false
     
+    let prompts = [
+        "What is your biggest dream right now?",
+        "Write down 3 things you are grateful for today.",
+        "What advice would you give yourself in 5 years?",
+        "Where do you hope to be in a year?",
+        "What is currently your favorite song and movie?",
+        "Describe a challenge you recently overcame.",
+        "What is a risk you want to take soon?"
+    ]
+    @State private var currentPromptIndex = 0
+    
     private var canSave: Bool { !title.isEmpty && !isLoadingMedia }
     
     var body: some View {
@@ -84,6 +97,46 @@ struct CapsuleCreationView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                             .padding(.top, 8)
+                            
+                        // Inspiration Banner
+                        VStack(spacing: 8) {
+                            HStack {
+                                Text("✨ Inspiration")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.cyan)
+                                Spacer()
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        currentPromptIndex = (currentPromptIndex + 1) % prompts.count
+                                    }
+                                }) {
+                                    Image(systemName: "arrow.2.circlepath")
+                                        .font(.caption)
+                                        .foregroundColor(.white.opacity(0.6))
+                                }
+                            }
+                            
+                            Button(action: {
+                                if note.isEmpty {
+                                    note = prompts[currentPromptIndex] + "\n\n"
+                                } else {
+                                    note += "\n\n" + prompts[currentPromptIndex] + "\n\n"
+                                }
+                            }) {
+                                Text(prompts[currentPromptIndex])
+                                    .font(.subheadline)
+                                    .italic()
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .multilineTextAlignment(.leading)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(12)
+                                    .background(Color.cyan.opacity(0.15))
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        .padding(.horizontal)
                         
                         // Section 1: Memory Details
                         VStack(spacing: 12) {
@@ -142,6 +195,9 @@ struct CapsuleCreationView: View {
                                                 if selectedPreset == preset {
                                                     Image(systemName: "checkmark")
                                                         .font(.caption2.bold())
+                                                } else if preset == .surpriseMe {
+                                                    Image(systemName: "dice.fill")
+                                                        .font(.caption2)
                                                 }
                                                 Text(preset.rawValue)
                                                     .font(.subheadline)
@@ -377,7 +433,8 @@ struct CapsuleCreationView: View {
             title: title,
             note: note,
             mediaType: selectedMediaType?.identifier,
-            unlockDate: unlockDate
+            unlockDate: unlockDate,
+            isSurprise: selectedPreset == .surpriseMe
         )
         
         if let sourceURL = selectedMediaFileURL {
