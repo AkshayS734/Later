@@ -94,8 +94,8 @@ struct CapsuleCreationView: View {
             Form {
                 // MARK: Memory Section
                 Section {
-                    TextField("Title", text: $title)
-                        .font(.body)
+                    TextField("Give this memory a title…", text: $title)
+                        .font(.title3.weight(.medium))
                         .accessibilityLabel("Memory title")
                         .accessibilityHint("Required. Give your memory a name.")
 
@@ -110,7 +110,7 @@ struct CapsuleCreationView: View {
                         }
                         TextEditor(text: $note)
                             .font(.body)
-                            .frame(minHeight: 100)
+                            .frame(minHeight: 140)
                             .accessibilityLabel("Memory note")
                             .accessibilityHint("Optional. Write a message to your future self.")
                     }
@@ -119,7 +119,7 @@ struct CapsuleCreationView: View {
                     Text("Memory")
                 }
 
-                // MARK: Inspiration (Progressive Disclosure)
+                // MARK: Inspiration
                 Section {
                     DisclosureGroup(
                         isExpanded: $showingPrompt,
@@ -131,6 +131,7 @@ struct CapsuleCreationView: View {
                                     .italic()
                                     .fixedSize(horizontal: false, vertical: true)
                                     .padding(.top, AppTheme.Spacing.sm)
+                                    .contentTransition(.interpolate)
 
                                 HStack {
                                     Button("Use this prompt") {
@@ -144,9 +145,10 @@ struct CapsuleCreationView: View {
                                     Spacer()
 
                                     Button {
-                                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
                                             currentPromptIndex = (currentPromptIndex + 1) % prompts.count
                                         }
+                                        UISelectionFeedbackGenerator().selectionChanged()
                                     } label: {
                                         Label("Next prompt", systemImage: "arrow.2.circlepath")
                                             .labelStyle(.iconOnly)
@@ -190,12 +192,12 @@ struct CapsuleCreationView: View {
                         .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                     }
 
-                    // Surprise capsule explanation
+                    // Surprise explanation
                     if selectedPreset == .surpriseMe {
                         Label("The unlock date is a secret — even from you.", systemImage: "questionmark.circle")
                             .font(.footnote)
-                            .foregroundStyle(AppTheme.secondaryLabel)
-                            .listRowBackground(AppTheme.surpriseTint.opacity(0.08))
+                            .foregroundStyle(AppTheme.surpriseTint)
+                            .listRowBackground(AppTheme.surpriseTint.opacity(0.06))
                             .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.97)))
                     }
                 } header: {
@@ -225,13 +227,14 @@ struct CapsuleCreationView: View {
                     Button("Seal") {
                         saveCapsule()
                     }
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .disabled(!canSave)
                 }
             }
             .onChange(of: selectedItem) { _, newItem in
                 loadMedia(newItem)
             }
+            .sensoryFeedback(.selection, trigger: selectedPreset)
         }
     }
 
@@ -241,20 +244,32 @@ struct CapsuleCreationView: View {
     private func presetChip(_ preset: SealPreset) -> some View {
         let isSelected = selectedPreset == preset
         Button {
-            withAnimation(reduceMotion ? nil : .spring(response: 0.3)) {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8)) {
                 selectedPreset = preset
                 if let interval = preset.interval {
                     unlockDate = Date().addingTimeInterval(interval)
                 }
             }
         } label: {
-            Label(preset.rawValue, systemImage: preset.icon)
-                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? Color(.systemBackground) : AppTheme.secondaryLabel)
-                .labelStyle(.titleOnly)
-                .padding(.horizontal, AppTheme.Spacing.lg)
-                .padding(.vertical, AppTheme.Spacing.sm)
-                .background(isSelected ? AppTheme.accent : Color(.tertiarySystemFill), in: SwiftUI.Capsule())
+            HStack(spacing: AppTheme.Spacing.xs) {
+                Image(systemName: preset.icon)
+                    .font(.caption)
+                Text(preset.rawValue)
+            }
+            .font(.subheadline.weight(isSelected ? .semibold : .regular))
+            .foregroundStyle(isSelected ? .white : AppTheme.secondaryLabel)
+            .padding(.horizontal, AppTheme.Spacing.lg)
+            .padding(.vertical, AppTheme.Spacing.sm)
+            .background {
+                if isSelected {
+                    SwiftUI.Capsule()
+                        .fill(AppTheme.accent)
+                        .shadow(color: AppTheme.accent.opacity(0.3), radius: 6, y: 2)
+                } else {
+                    SwiftUI.Capsule()
+                        .fill(Color(.tertiarySystemFill))
+                }
+            }
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -273,21 +288,20 @@ struct CapsuleCreationView: View {
             }
             .frame(maxWidth: .infinity, minHeight: 44)
         } else if let thumbnail = thumbnailImage {
-            ZStack(alignment: .bottomTrailing) {
+            ZStack(alignment: .topTrailing) {
                 Image(uiImage: thumbnail)
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: .infinity)
-                    .frame(height: 180)
+                    .frame(height: 200)
                     .clipped()
-                    .clipShape(.rect(cornerRadius: AppTheme.Radius.md))
+                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md, style: .continuous))
 
-                Label("Change", systemImage: "pencil.circle.fill")
-                    .font(.caption.weight(.semibold))
+                // Change badge
+                Image(systemName: "pencil.circle.fill")
+                    .font(.title3)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, AppTheme.Spacing.sm)
-                    .padding(.vertical, AppTheme.Spacing.xs)
-                    .background(.ultraThinMaterial, in: SwiftUI.Capsule())
+                    .shadow(color: .black.opacity(0.3), radius: 4)
                     .padding(AppTheme.Spacing.sm)
             }
         } else if selectedMediaFileURL != nil {
