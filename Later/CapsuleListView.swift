@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Combine
+import WidgetKit
 
 struct CapsuleListView: View {
     @EnvironmentObject var storageManager: StorageManager
@@ -219,10 +220,7 @@ struct CapsuleListView: View {
         storageManager.cancelNotification(for: capsule)
         storageManager.deleteMedia(for: capsule)
         modelContext.delete(capsule)
-    }
-
-    private func deleteCapsules(from list: [Capsule], at offsets: IndexSet) {
-        for index in offsets { deleteCapsule(list[index]) }
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
@@ -309,12 +307,13 @@ struct CapsuleRow: View {
         }
         .padding(.vertical, AppTheme.Spacing.md)
         .background {
+            let elevation = AppTheme.Elevation.small(colorScheme: colorScheme)
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .shadow(
-                    color: AppTheme.Elevation.small(colorScheme: colorScheme).color,
-                    radius: AppTheme.Elevation.small(colorScheme: colorScheme).radius,
-                    y: AppTheme.Elevation.small(colorScheme: colorScheme).y
+                    color: elevation.color,
+                    radius: elevation.radius,
+                    y: elevation.y
                 )
         }
         .padding(.vertical, AppTheme.Spacing.xs)
@@ -328,11 +327,13 @@ struct CapsuleRow: View {
     private func compactCountdown(_ interval: TimeInterval) -> String {
         let days = Int(interval) / 86400
         let hours = (Int(interval) % 86400) / 3600
+        let minutes = (Int(interval) % 3600) / 60
 
         if days > 0 { return "\(days)d" }
         if hours > 0 { return "\(hours)h" }
-        let minutes = (Int(interval) % 3600) / 60
-        return "\(minutes)m"
+        if minutes > 0 { return "\(minutes)m" }
+        let seconds = max(0, Int(interval))
+        return "\(seconds)s"
     }
 }
 

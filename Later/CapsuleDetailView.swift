@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import AVKit
 import UniformTypeIdentifiers
+import WidgetKit
 
 struct CapsuleDetailView: View {
     @EnvironmentObject var storageManager: StorageManager
@@ -155,11 +156,15 @@ struct CapsuleDetailView: View {
         .white, .cyan, .purple
     ]
 
+    private let burstSizes: [CGFloat] = [
+        10, 7, 13, 8, 11, 6, 14, 9, 12, 7, 10, 13, 8, 11, 6, 14, 9, 12
+    ]
+
     private var burstEffect: some View {
         ZStack {
             ForEach(0..<18, id: \.self) { i in
                 let angle = Double(i) / 18.0 * 360.0
-                let size: CGFloat = CGFloat.random(in: 5...14)
+                let size = burstSizes[i]
                 Circle()
                     .fill(burstColors[i])
                     .frame(width: size, height: size)
@@ -588,6 +593,7 @@ struct CapsuleDetailView: View {
 
     private func performUnlock() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        WidgetCenter.shared.reloadAllTimelines()
 
         if reduceMotion {
             capsule.isOpened = true

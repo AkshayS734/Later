@@ -52,7 +52,9 @@ struct OnboardingView: View {
                     Spacer()
                     if currentStep < steps.count - 1 {
                         Button("Skip") {
-                            withAnimation { hasSeenOnboarding = true }
+                            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                                hasSeenOnboarding = true
+                            }
                         }
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.45))
@@ -96,7 +98,9 @@ struct OnboardingView: View {
                             }
                         } else {
                             storageManager.requestNotificationPermissionIfNeeded()
-                            withAnimation { hasSeenOnboarding = true }
+                            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                                hasSeenOnboarding = true
+                            }
                         }
                     } label: {
                         Text(currentStep < steps.count - 1 ? "Continue" : "Get Started")

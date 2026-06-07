@@ -2,8 +2,8 @@ import SwiftUI
 
 // MARK: - App Design Tokens
 //
-// Semantic, system-adaptive design system.
-// All colors respect Light / Dark mode automatically.
+// Design system tokens.
+// Most colors are semantic/system-adaptive; brand accents and custom gradients use fixed RGB values.
 // Typography presets use SF Pro with clear hierarchy.
 
 struct AppTheme {

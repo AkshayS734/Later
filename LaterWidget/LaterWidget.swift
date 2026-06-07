@@ -124,13 +124,7 @@ struct LaterWidgetEntryView: View {
                     } else {
                         Text(capsule.unlockDate, style: .timer)
                             .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color(.systemIndigo), .cyan],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .foregroundColor(Color(.systemIndigo))
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
