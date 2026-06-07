@@ -220,6 +220,7 @@ struct CapsuleListView: View {
         storageManager.cancelNotification(for: capsule)
         storageManager.deleteMedia(for: capsule)
         modelContext.delete(capsule)
+        try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 }

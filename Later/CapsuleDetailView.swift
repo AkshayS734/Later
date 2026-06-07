@@ -100,6 +100,8 @@ struct CapsuleDetailView: View {
             Button("Delete", role: .destructive) {
                 storageManager.deleteMedia(for: capsule)
                 modelContext.delete(capsule)
+                try? modelContext.save()
+                WidgetCenter.shared.reloadAllTimelines()
                 dismiss()
             }
             Button("Cancel", role: .cancel) { }
