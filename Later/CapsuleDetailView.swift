@@ -281,19 +281,19 @@ struct CapsuleDetailView: View {
     // MARK: - Unlock Button
 
     private var unlockButton: some View {
-        Button {
-            showConfirmation = true
-        } label: {
-            Label("Break Seal", systemImage: "lock.open.fill")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppTheme.Spacing.lg)
-                .foregroundStyle(Color(red: 0.06, green: 0.06, blue: 0.16))
-                .background(.white, in: RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous))
-                .shadow(color: .white.opacity(0.15), radius: 16, y: 4)
-        }
-        .sensoryFeedback(.impact(weight: .heavy), trigger: showConfirmation)
-    }
+         Button {
+             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+             showConfirmation = true
+         } label: {
+             Label("Break Seal", systemImage: "lock.open.fill")
+                 .font(.headline)
+                 .frame(maxWidth: .infinity)
+                 .padding(.vertical, AppTheme.Spacing.lg)
+                 .foregroundStyle(Color(red: 0.06, green: 0.06, blue: 0.16))
+                 .background(.white, in: RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous))
+                 .shadow(color: .white.opacity(0.15), radius: 16, y: 4)
+         }
+     }
 
     // MARK: - Locked Metadata
 
@@ -593,11 +593,12 @@ struct CapsuleDetailView: View {
 
     private func performUnlock() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-        WidgetCenter.shared.reloadAllTimelines()
 
         if reduceMotion {
             capsule.isOpened = true
             storageManager.cancelNotification(for: capsule)
+            try? modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             return
         }
@@ -606,6 +607,8 @@ struct CapsuleDetailView: View {
             capsule.isOpened = true
             storageManager.cancelNotification(for: capsule)
         }
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
         showUnlockAnimation = true
         withAnimation(.easeOut(duration: 0.6)) {
             burstScale = 1.3

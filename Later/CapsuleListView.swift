@@ -164,7 +164,7 @@ struct CapsuleListView: View {
                 Image(systemName: "clock.badge.plus")
                     .font(.system(size: 48, weight: .light))
                     .foregroundStyle(AppTheme.accent)
-                    .symbolEffect(.pulse.wholeSymbol, options: .repeating)
+                    .symbolEffect(.pulse.wholeSymbol, options: .repeating, isActive: !reduceMotion)
             }
             .accessibilityHidden(true)
 

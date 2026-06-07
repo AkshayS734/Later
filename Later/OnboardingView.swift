@@ -135,6 +135,7 @@ struct OnboardingStep {
 struct OnboardingPageView: View {
     let step: OnboardingStep
     let isActive: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: AppTheme.Spacing.xxxl) {
@@ -155,7 +156,7 @@ struct OnboardingPageView: View {
                 Image(systemName: step.icon)
                     .font(.system(size: 48, weight: .medium))
                     .foregroundStyle(step.iconColor)
-                    .symbolEffect(.pulse.wholeSymbol, options: .repeating.speed(0.5), isActive: isActive)
+                    .symbolEffect(.pulse.wholeSymbol, options: .repeating.speed(0.5), isActive: isActive && !reduceMotion)
             }
             .accessibilityHidden(true)
 
