@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Combine
+import WidgetKit
 
 struct CapsuleListView: View {
     @EnvironmentObject var storageManager: StorageManager
@@ -17,12 +18,17 @@ struct CapsuleListView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if capsules.isEmpty {
-                    emptyState
-                } else {
-                    capsuleList
+            ZStack(alignment: .bottom) {
+                Group {
+                    if capsules.isEmpty {
+                        emptyState
+                    } else {
+                        capsuleList
+                    }
                 }
+
+                // Floating "New Memory" CTA
+                floatingCTA
             }
             .navigationTitle("Time Capsules")
             .toolbar {
@@ -31,24 +37,9 @@ struct CapsuleListView: View {
                         showingSettingsSheet = true
                     } label: {
                         Image(systemName: "gearshape")
+                            .fontWeight(.medium)
                             .accessibilityLabel("Settings")
                     }
-                }
-                ToolbarItem(placement: .bottomBar) {
-                    Spacer()
-                }
-                ToolbarItem(placement: .bottomBar) {
-                    Button {
-                        showingCreationSheet = true
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title3)
-                            Text("New Memory")
-                                .fontWeight(.semibold)
-                        }
-                    }
-                    .accessibilityLabel("Create new memory capsule")
                 }
             }
             .sheet(isPresented: $showingCreationSheet) {
@@ -64,84 +55,143 @@ struct CapsuleListView: View {
         }
     }
 
+    // MARK: - Floating CTA
+
+    private var floatingCTA: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            showingCreationSheet = true
+        } label: {
+            HStack(spacing: AppTheme.Spacing.sm) {
+                Image(systemName: "plus")
+                    .font(.body.weight(.bold))
+                Text("New Memory")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, AppTheme.Spacing.xxl)
+            .padding(.vertical, AppTheme.Spacing.md)
+            .background(AppTheme.accent, in: SwiftUI.Capsule())
+            .shadow(color: AppTheme.accent.opacity(0.35), radius: 12, x: 0, y: 6)
+        }
+        .padding(.bottom, AppTheme.Spacing.lg)
+        .accessibilityLabel("Create new memory capsule")
+    }
+
     // MARK: - Capsule List
 
     private var capsuleList: some View {
-        List {
-            if !unlockedCapsules.isEmpty {
-                Section {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+
+                // Ready to Open
+                if !unlockedCapsules.isEmpty {
+                    sectionHeader(title: "Ready to Open", icon: "lock.open.fill", color: AppTheme.readyTint)
+
                     ForEach(unlockedCapsules) { capsule in
                         NavigationLink(destination: CapsuleDetailView(capsule: capsule)) {
-                            CapsuleRow(capsule: capsule, isLocked: false, now: now)
+                            CapsuleRow(capsule: capsule, isLocked: false, now: now, colorScheme: colorScheme)
                         }
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                deleteCapsule(capsule)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
-                    .onDelete { offsets in
-                        deleteCapsules(from: unlockedCapsules, at: offsets)
-                    }
-                } header: {
-                    Label("Ready to Open", systemImage: "lock.open.fill")
-                        .foregroundStyle(AppTheme.readyTint)
-                        .font(.footnote.weight(.semibold))
-                        .textCase(nil)
-                }
-            }
 
-            if !lockedCapsules.isEmpty {
-                Section {
+                    Spacer().frame(height: AppTheme.Spacing.xxl)
+                }
+
+                // Sealed
+                if !lockedCapsules.isEmpty {
+                    sectionHeader(title: "Sealed", icon: "lock.fill", color: AppTheme.sealedTint)
+
                     ForEach(lockedCapsules) { capsule in
                         NavigationLink(destination: CapsuleDetailView(capsule: capsule)) {
-                            CapsuleRow(capsule: capsule, isLocked: true, now: now)
+                            CapsuleRow(capsule: capsule, isLocked: true, now: now, colorScheme: colorScheme)
                         }
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                deleteCapsule(capsule)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
-                    .onDelete { offsets in
-                        deleteCapsules(from: lockedCapsules, at: offsets)
-                    }
-                } header: {
-                    Label("Sealed", systemImage: "lock.fill")
-                        .foregroundStyle(AppTheme.sealedTint)
-                        .font(.footnote.weight(.semibold))
-                        .textCase(nil)
                 }
+
+                // Bottom spacer for floating CTA
+                Spacer().frame(height: 100)
             }
+            .padding(.horizontal, AppTheme.Spacing.lg)
+            .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85), value: capsules.map(\.id))
         }
-        .listStyle(.insetGrouped)
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: lockedCapsules.map(\.id))
+    }
+
+    // MARK: - Section Header
+
+    private func sectionHeader(title: String, icon: String, color: Color) -> some View {
+        HStack(spacing: AppTheme.Spacing.sm) {
+            Image(systemName: icon)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(color)
+            Text(title)
+                .font(AppTheme.Typography.overline)
+                .textCase(.uppercase)
+                .tracking(1.0)
+                .foregroundStyle(AppTheme.secondaryLabel)
+            Spacer()
+        }
+        .padding(.horizontal, AppTheme.Spacing.xs)
+        .padding(.bottom, AppTheme.Spacing.sm)
+        .padding(.top, AppTheme.Spacing.md)
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: AppTheme.Spacing.xl) {
+        VStack(spacing: AppTheme.Spacing.xxl) {
             Spacer()
-            Image(systemName: "clock.badge.plus")
-                .font(.system(size: 56, weight: .thin))
-                .foregroundStyle(AppTheme.secondaryLabel)
-                .accessibilityHidden(true)
+
+            ZStack {
+                Circle()
+                    .fill(AppTheme.accent.opacity(0.08))
+                    .frame(width: 120, height: 120)
+                Image(systemName: "clock.badge.plus")
+                    .font(.system(size: 48, weight: .light))
+                    .foregroundStyle(AppTheme.accent)
+                    .symbolEffect(.pulse.wholeSymbol, options: .repeating, isActive: !reduceMotion)
+            }
+            .accessibilityHidden(true)
 
             VStack(spacing: AppTheme.Spacing.sm) {
                 Text("No Memories Yet")
-                    .font(.title2.weight(.semibold))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(AppTheme.label)
 
                 Text("Seal a memory for your future self.\nIt'll be waiting when the time is right.")
                     .font(.subheadline)
                     .foregroundStyle(AppTheme.secondaryLabel)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(3)
+                    .lineSpacing(4)
             }
 
             Button {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 showingCreationSheet = true
             } label: {
-                Label("New Memory", systemImage: "plus")
+                Label("Create First Memory", systemImage: "plus")
                     .font(.headline)
-                    .padding(.horizontal, AppTheme.Spacing.xxl)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, AppTheme.Spacing.xxxl)
                     .padding(.vertical, AppTheme.Spacing.md)
+                    .background(AppTheme.accent, in: SwiftUI.Capsule())
+                    .shadow(color: AppTheme.accent.opacity(0.3), radius: 10, y: 4)
             }
-            .buttonStyle(.borderedProminent)
-            .clipShape(.rect(cornerRadius: AppTheme.Radius.lg))
             .accessibilityLabel("Create your first memory capsule")
 
             Spacer()
@@ -165,14 +215,13 @@ struct CapsuleListView: View {
 
     // MARK: - Actions
 
-    private func deleteCapsules(from list: [Capsule], at offsets: IndexSet) {
+    private func deleteCapsule(_ capsule: Capsule) {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        for index in offsets {
-            let capsule = list[index]
-            storageManager.cancelNotification(for: capsule)
-            storageManager.deleteMedia(for: capsule)
-            modelContext.delete(capsule)
-        }
+        storageManager.cancelNotification(for: capsule)
+        storageManager.deleteMedia(for: capsule)
+        modelContext.delete(capsule)
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
@@ -182,17 +231,18 @@ struct CapsuleRow: View {
     let capsule: Capsule
     let isLocked: Bool
     let now: Date
+    let colorScheme: ColorScheme
+
+    private var accentEdge: Color {
+        if !isLocked { return AppTheme.readyTint }
+        if capsule.isSurprise { return AppTheme.surpriseTint }
+        return AppTheme.sealedTint
+    }
 
     private var iconName: String {
         if !isLocked { return "lock.open.fill" }
         if capsule.isSurprise { return "dice.fill" }
         return "lock.fill"
-    }
-
-    private var iconColor: Color {
-        if !isLocked { return AppTheme.readyTint }
-        if capsule.isSurprise { return AppTheme.surpriseTint }
-        return AppTheme.sealedTint
     }
 
     private var subtitleText: String {
@@ -202,30 +252,70 @@ struct CapsuleRow: View {
     }
 
     var body: some View {
-        HStack(spacing: AppTheme.Spacing.lg) {
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(iconColor.opacity(0.12))
-                    .frame(width: 44, height: 44)
-                Image(systemName: iconName)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(iconColor)
-            }
-            .accessibilityHidden(true)
+        HStack(spacing: 0) {
+            // Color accent edge
+            RoundedRectangle(cornerRadius: 2)
+                .fill(accentEdge)
+                .frame(width: 3)
+                .padding(.vertical, AppTheme.Spacing.sm)
 
-            // Text
-            VStack(alignment: .leading, spacing: 3) {
-                Text(capsule.title)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(AppTheme.label)
-                    .lineLimit(1)
+            HStack(spacing: AppTheme.Spacing.lg) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(accentEdge.opacity(0.1))
+                        .frame(width: 48, height: 48)
+                    Image(systemName: iconName)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(accentEdge)
+                }
+                .accessibilityHidden(true)
 
-                Text(subtitleText)
-                    .font(.footnote)
-                    .foregroundStyle(isLocked ? AppTheme.secondaryLabel : AppTheme.readyTint)
-                    .fontWeight(isLocked ? .regular : .medium)
+                // Text
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(capsule.title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(AppTheme.label)
+                        .lineLimit(1)
+
+                    Text(subtitleText)
+                        .font(.caption)
+                        .foregroundStyle(isLocked ? AppTheme.secondaryLabel : AppTheme.readyTint)
+                        .fontWeight(isLocked ? .regular : .medium)
+                }
+
+                Spacer(minLength: 0)
+
+                // Countdown badge for locked capsules
+                if isLocked && !capsule.isSurprise {
+                    let remaining = capsule.unlockDate.timeIntervalSince(now)
+                    if remaining > 0 {
+                        Text(compactCountdown(remaining))
+                            .font(.caption2.monospacedDigit().weight(.semibold))
+                            .foregroundStyle(AppTheme.sealedTint)
+                            .padding(.horizontal, AppTheme.Spacing.sm)
+                            .padding(.vertical, AppTheme.Spacing.xs)
+                            .background(AppTheme.sealedTint.opacity(0.1), in: SwiftUI.Capsule())
+                    }
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.tertiaryLabel)
             }
+            .padding(.leading, AppTheme.Spacing.md)
+            .padding(.trailing, AppTheme.Spacing.lg)
+        }
+        .padding(.vertical, AppTheme.Spacing.md)
+        .background {
+            let elevation = AppTheme.Elevation.small(colorScheme: colorScheme)
+            RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .shadow(
+                    color: elevation.color,
+                    radius: elevation.radius,
+                    y: elevation.y
+                )
         }
         .padding(.vertical, AppTheme.Spacing.xs)
         .accessibilityElement(children: .combine)
@@ -233,6 +323,18 @@ struct CapsuleRow: View {
             ? "\(capsule.title), \(capsule.isSurprise ? "sealed until a surprise date" : "sealed until \(subtitleText)")"
             : "\(capsule.title), ready to open")
         .accessibilityHint("Double-tap to open")
+    }
+
+    private func compactCountdown(_ interval: TimeInterval) -> String {
+        let days = Int(interval) / 86400
+        let hours = (Int(interval) % 86400) / 3600
+        let minutes = (Int(interval) % 3600) / 60
+
+        if days > 0 { return "\(days)d" }
+        if hours > 0 { return "\(hours)h" }
+        if minutes > 0 { return "\(minutes)m" }
+        let seconds = max(0, Int(interval))
+        return "\(seconds)s"
     }
 }
 
